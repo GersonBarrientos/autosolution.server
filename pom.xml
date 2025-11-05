@@ -20,9 +20,20 @@
   <properties>
     <java.version>21</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <testcontainers.version>1.20.2</testcontainers.version>
-    <flyway.version>10.18.2</flyway.version>
+
+    <!-- Libs -->
     <ojdbc.version>23.4.0.24.05</ojdbc.version>
+    <flyway.version>10.18.2</flyway.version>
+    <testcontainers.version>1.20.2</testcontainers.version>
+
+    <!-- Props para el plugin de Flyway (se pueden sobrescribir con -D...) -->
+    <flyway.url></flyway.url>
+    <flyway.user></flyway.user>
+    <flyway.password></flyway.password>
+    <flyway.schemas>GERSON</flyway.schemas>
+    <flyway.defaultSchema>GERSON</flyway.defaultSchema>
+    <flyway.locations>classpath:db/migration</flyway.locations>
+    <flyway.table>FLYWAY_SCHEMA_HISTORY_AS</flyway.table>
   </properties>
 
   <!-- BOM de Testcontainers -->
@@ -86,7 +97,7 @@
       <artifactId>thymeleaf-extras-springsecurity6</artifactId>
     </dependency>
 
-    <!-- WebJars -->
+    <!-- WebJars (opcional) -->
     <dependency>
       <groupId>org.webjars</groupId>
       <artifactId>bootstrap</artifactId>
@@ -136,7 +147,7 @@
   </dependencies>
 
   <build>
-    <!-- Evita filtrado de recursos para no dañar scripts SQL -->
+    <!-- No filtrar resources, para no romper SQL -->
     <resources>
       <resource>
         <directory>src/main/resources</directory>
@@ -151,24 +162,27 @@
         <artifactId>spring-boot-maven-plugin</artifactId>
       </plugin>
 
-      <!-- Flyway (usa su propio classpath; añadimos el driver aquí también) -->
+      <!-- Flyway plugin (sin credenciales embebidas) -->
       <plugin>
         <groupId>org.flywaydb</groupId>
         <artifactId>flyway-maven-plugin</artifactId>
         <version>${flyway.version}</version>
         <configuration>
           <locations>
-            <location>classpath:db/migration</location>
+            <location>${flyway.locations}</location>
           </locations>
           <schemas>
-            <schema>GERSON</schema>
+            <schema>${flyway.schemas}</schema>
           </schemas>
+          <defaultSchema>${flyway.defaultSchema}</defaultSchema>
+          <table>${flyway.table}</table>
           <validateOnMigrate>true</validateOnMigrate>
+          <cleanDisabled>true</cleanDisabled>
 
-          <!-- Sugerencia: mejor mover estos a application-*.properties y omitirlos aquí -->
-          <url>jdbc:oracle:thin:@localhost:1521/XEPDB1</url>
-          <user>GERSON</user>
-          <password>__PON_AQUI_TU_CLAVE__</password>
+          <!-- Las 3 de abajo vienen por -Dflyway.url/-Dflyway.user/-Dflyway.password -->
+          <url>${flyway.url}</url>
+          <user>${flyway.user}</user>
+          <password>${flyway.password}</password>
         </configuration>
         <dependencies>
           <dependency>
@@ -180,4 +194,25 @@
       </plugin>
     </plugins>
   </build>
+
+  <!-- Perfiles para atajos de flyway:migrate sin repetir params (sin password embebida) -->
+  <profiles>
+    <profile>
+      <id>dev</id>
+      <properties>
+        <flyway.url>jdbc:oracle:thin:@localhost:1521/XEPDB1</flyway.url>
+        <flyway.user>GERSON</flyway.user>
+        <!-- password siempre por -Dflyway.password=... -->
+      </properties>
+    </profile>
+
+    <profile>
+      <id>prod</id>
+      <properties>
+        <flyway.url>jdbc:oracle:thin:@localhost:1521/XEPDB1</flyway.url>
+        <flyway.user>GERSON</flyway.user>
+        <!-- password siempre por -Dflyway.password=... -->
+      </properties>
+    </profile>
+  </profiles>
 </project>

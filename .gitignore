@@ -50,3 +50,9 @@ src/main/resources/application-dev-*.properties
 # src/main/resources/application-prod.properties
 # En su lugar, usa application-prod.properties.example (sí se versiona)
 '@ | Set-Content -Encoding UTF8 .gitignore
+target/
+.idea/
+.vscode/
+*.iml
+*.log
+.DS_Store
